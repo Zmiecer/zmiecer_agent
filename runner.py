@@ -87,8 +87,6 @@ class Runner(object):
             activations=self.activations
         )
         genetics.generate_new_models()
-        self.generation += 1
-        self.scores = np.zeros(self.population_size)
 
     def run_envs(self):
         processes = []
@@ -115,6 +113,9 @@ class Runner(object):
             with open(self.save_dir + 'score_{}.txt'.format(model_number), mode='r') as score_file:
                 score = int(score_file.readline())
                 self.scores[model_number] = score
+
+    def reset_scores(self):
+        self.scores = np.zeros(self.population_size)
 
     def run(self):
         g = Genetics(
@@ -145,6 +146,7 @@ class Runner(object):
             self.load_scores()
             self.genetics()
             self.generation += 1
+            self.reset_scores()
 
     def run_env(self, model_number):
         env = MyEnv(
