@@ -21,21 +21,23 @@ def parse_args():
     # Hyperparameters
     parser.add_argument('--population_size', type=int, default=100, help='Population size')
     parser.add_argument('--parents_count', type=int, default=10, help='Parents count')
-    parser.add_argument('--mutation_power', type=int, default=0.002, help='Mutation power')
+    parser.add_argument('--mutation_power', type=float, default=0.002, help='Mutation power')
 
     # Booleans
     parser.add_argument('--uniform', type=bool, default=True, help='Use uniform to choose parents')
-    parser.add_argument('--crossover', type=bool, default=True, help='Whether crossover is needed')
+    parser.add_argument('--crossover', type=bool, default=True, help='Use crossover')
 
     # Env parameters
     parser.add_argument('--envs_number', type=int, default=1, help='Number of envs to run in parallel')
-    parser.add_argument('--save_dir', type=str, default='/media/Data/Diploma/saves/test/', help='Save dir')
+    parser.add_argument('--save_dir', type=str, default='/media/Data/Diploma/saves/beacon/test/', help='Save dir')
     parser.add_argument('--eval', type=bool, default=False, help='Evaluate with random models')
     parser.add_argument('--render', type=bool, default=False, help='Visualize')
 
     # Model parameters
     parser.add_argument('--layers', type=int, default=2, help='Number of layers')
     parser.add_argument('--activations', type=bool, default=True, help='Activations after conv layers')
+
+    parser.add_argument('--load', type=bool, default=False, help='Load model')
 
     args = parser.parse_args()
     return args

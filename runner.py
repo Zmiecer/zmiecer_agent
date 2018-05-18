@@ -110,6 +110,12 @@ class Runner(object):
         print('On {} processes spent {} seconds'.format(self.envs_number, time_spent))
         print('Average time spent: {}'.format(time_spent / self.envs_number))
 
+    def load_scores(self):
+        for model_number in range(self.population_size):
+            with open(self.save_dir + 'score_{}.txt'.format(model_number), mode='r') as score_file:
+                score = int(score_file.readline())
+                self.scores[model_number] = score
+
     def run(self):
         g = Genetics(
             population_size=self.population_size,
@@ -136,6 +142,7 @@ class Runner(object):
             if game_number > max_games:
                 break
 
+            self.load_scores()
             self.genetics()
             self.generation += 1
 
