@@ -1,3 +1,5 @@
+import os
+
 from shutil import copyfile
 from multiprocessing import Process
 
@@ -13,10 +15,9 @@ class Runner(object):
     def __init__(self, args):
         # TODO: По-хорошему, save/load должен как-то подхватывать last generation
         self.map_name = args.map_name
-        self.max_steps = args.max_steps
+        self.game_steps_per_episode = args.steps_per_episode
         self.step_mul = args.step_mul
         self.screen_size = args.screen_size
-        self.save_dir = args.save_dir
         self.visualize = args.render
         self.envs_number = args.envs_number
         self.max_generations = args.generations
@@ -27,17 +28,31 @@ class Runner(object):
         self.mutation_power = args.mutation_power
 
         # Booleans
-        self.choose_uniformly = args.uniform
-        self.do_crossover = args.crossover
+        self.choose_uniformly = args.uniform_feature
+        self.do_crossover = args.crossover_feature
 
         # Model parameters
         self.layers = args.layers
-        self.activations = args.activations
+        print(args)
+        self.activations = args.activations_feature
 
         # Starting params
         self.generation = 0
         self.game_number = 0
         self.scores = np.zeros(self.population_size)
+
+        # Save dir
+        self.save_dir = args.save_dir + 'pop_{}_par_{}_mp_{}_c_{}_u_{}_a_{}/'.format(
+            self.population_size,
+            self.parents_count,
+            self.mutation_power,
+            self.do_crossover,
+            self.choose_uniformly,
+            self.activations
+        )
+        print(self.save_dir)
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir)
 
     def save_parent_models(self, parent_indices):
         for parent_number, parent_index in enumerate(parent_indices):
@@ -131,8 +146,6 @@ class Runner(object):
         )
         g.generate_new_models(init=True)
 
-        max_games = 1000000000
-        game_number = 0
         while True:
             envs_runned = 0
             while envs_runned < self.population_size:
@@ -140,13 +153,13 @@ class Runner(object):
                 self.run_envs()
                 envs_runned += self.envs_number
 
-            if game_number > max_games:
-                break
-
             self.load_scores()
             self.genetics()
-            self.generation += 1
             self.reset_scores()
+            self.generation += 1
+
+            if self.generation > self.max_generations:
+                break
 
     def run_env(self, model_number):
         env = MyEnv(
@@ -154,7 +167,7 @@ class Runner(object):
             step_mul=self.step_mul,
             screen_size=self.screen_size,
             minimap_size=self.screen_size,
-            game_steps_per_episode=self.max_steps,
+            game_steps_per_episode=self.game_steps_per_episode,
             visualize=self.visualize,
             model_number=model_number,
             generation=self.generation,
