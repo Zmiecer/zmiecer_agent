@@ -33,7 +33,6 @@ class Runner(object):
 
         # Model parameters
         self.layers = args.layers
-        print(args)
         self.activations = args.activations_feature
 
         # Starting params
@@ -50,7 +49,6 @@ class Runner(object):
             self.choose_uniformly,
             self.activations
         )
-        print(self.save_dir)
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
 

@@ -49,11 +49,10 @@ def parse_args():
 if __name__ == '__main__':
     FLAGS = flags.FLAGS
     FLAGS([sys.argv[0]])
-    print(sys.argv)
 
     np.random.seed()
 
     args = parse_args()
-    print(args)
     runner = Runner(args)
     runner.run()
+
