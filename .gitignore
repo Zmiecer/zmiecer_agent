@@ -160,3 +160,7 @@ fabric.properties
 .idea/
 
 
+
+echo\.sh
+
+train\.sh

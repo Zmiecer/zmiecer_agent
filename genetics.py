@@ -89,14 +89,19 @@ class Genetics(object):
             activations=self.activations
         )
         if not init:
-            first_parent_index, second_parent_index = self.choose_parents()
-            if self.do_crossover:
-                weights = self.crossover(first_parent_index, second_parent_index)
+            if index == self.population_size - 1:
+                best_parent_index = np.argmax(self.parents_scores)
+                model.load_weights(self.save_dir + 'parent_{}'.format(best_parent_index) + '.h5')
             else:
-                model.load_weights(self.save_dir + 'parent_{}'.format(first_parent_index) + '.h5')
-                weights = model.get_weights()
-            new_weights = self.mutate_weights(weights)
-            model.set_weights(new_weights)
+
+                first_parent_index, second_parent_index = self.choose_parents()
+                if self.do_crossover:
+                    weights = self.crossover(first_parent_index, second_parent_index)
+                else:
+                    model.load_weights(self.save_dir + 'parent_{}'.format(first_parent_index) + '.h5')
+                    weights = model.get_weights()
+                new_weights = self.mutate_weights(weights)
+                model.set_weights(new_weights)
         model.save_weights(self.save_dir + 'model_{}'.format(index) + '.h5')
         print('Model {} generated'.format(index))
 

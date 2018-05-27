@@ -31,7 +31,7 @@ def parse_args():
 
     # Env parameters
     parser.add_argument('--envs_number', type=int, default=1, help='Number of envs to run in parallel')
-    parser.add_argument('--save_dir', type=str, default='/media/Data/Diploma/saves/beacon/', help='Save dir')
+    parser.add_argument('--save_dir', type=str, default='/media/Data/Diploma/saves/', help='Save dir')
     parser.add_argument('--eval', type=bool, default=False, help='Evaluate with random models')
     parser.add_argument('--render', type=bool, default=False, help='Visualize')
 

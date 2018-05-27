@@ -1,4 +1,5 @@
 import os
+import time
 
 from shutil import copyfile
 from multiprocessing import Process
@@ -8,13 +9,22 @@ import numpy as np
 from environment import MyEnv
 from genetics import Genetics
 
-import time
+from pysc2.maps.lib import Map
 
 
 class Runner(object):
     def __init__(self, args):
         # TODO: По-хорошему, save/load должен как-то подхватывать last generation
-        self.map_name = args.map_name
+        map_name = args.map_name
+        current_map = Map()
+        current_map.directory="mini_games"
+        current_map.players = 1
+        current_map.score_index = 0
+        current_map.game_steps_per_episode = 0
+        current_map.step_mul = 8
+        current_map.filename = map_name
+        
+        self.map_name = current_map
         self.game_steps_per_episode = args.steps_per_episode
         self.step_mul = args.step_mul
         self.screen_size = args.screen_size
