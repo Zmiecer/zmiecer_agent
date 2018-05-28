@@ -15,6 +15,7 @@ class MyEnv(SC2Env):
                  screen_size,
                  minimap_size,
                  game_steps_per_episode,
+                 max_games,
                  visualize,
                  model_number,
                  generation,
@@ -24,9 +25,10 @@ class MyEnv(SC2Env):
                                     step_mul=step_mul,
                                     screen_size_px=(screen_size, screen_size),
                                     minimap_size_px=(minimap_size, minimap_size),
-                                    game_steps_per_episode=game_steps_per_episode,
+                                    game_steps_per_episode=0,
                                     visualize=visualize)
         self.game_steps_per_episode = game_steps_per_episode
+        self.max_games = max_games
         self.model_number = model_number
         self.generation = generation
         self.save_dir = save_dir
@@ -105,7 +107,8 @@ class MyEnv(SC2Env):
         )
         model.load_weights(self.save_dir + 'model_{}.h5'.format(self.model_number))
         print('Model {} loaded'.format(self.model_number))
-        while steps < self.game_steps_per_episode:
+        games_played = 0
+        while True:
             observations = obs[0].observation
             screen, minimap = self.translate_observations(observations)
 
@@ -123,6 +126,11 @@ class MyEnv(SC2Env):
             steps += 1
             if self.state == StepType.LAST:
                 current_reward = observations["score_cumulative"][0]
+                print(current_reward)
                 cumulative_score += current_reward
+                games_played += 1
+
+            if games_played >= self.max_games:
+                break
 
         return cumulative_score

@@ -10,22 +10,25 @@ from environment import MyEnv
 from genetics import Genetics
 
 from pysc2.maps.lib import Map
+from pysc2.maps.mini_games import mini_games
 
 
 class Runner(object):
     def __init__(self, args):
         # TODO: По-хорошему, save/load должен как-то подхватывать last generation
-        map_name = args.map_name
-        current_map = Map()
-        current_map.directory="mini_games"
-        current_map.players = 1
-        current_map.score_index = 0
-        current_map.game_steps_per_episode = 0
-        current_map.step_mul = 8
-        current_map.filename = map_name
+        current_map = args.map_name
+        if current_map not in mini_games:
+            current_map = Map()
+            current_map.directory="mini_games"
+            current_map.players = 1
+            current_map.score_index = 0
+            current_map.game_steps_per_episode = 0
+            current_map.step_mul = 8
+            current_map.filename = args.map_name
         
         self.map_name = current_map
         self.game_steps_per_episode = args.steps_per_episode
+        self.max_games = args.max_games
         self.step_mul = args.step_mul
         self.screen_size = args.screen_size
         self.visualize = args.render
@@ -176,6 +179,7 @@ class Runner(object):
             screen_size=self.screen_size,
             minimap_size=self.screen_size,
             game_steps_per_episode=self.game_steps_per_episode,
+            max_games = self.max_games,
             visualize=self.visualize,
             model_number=model_number,
             generation=self.generation,
