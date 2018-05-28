@@ -13,8 +13,7 @@ class Genetics(object):
                  do_crossover,
                  parents_scores,
                  save_dir,
-                 envs_number,
-                 activations
+                 envs_number
                  ):
 
         # Training parameters
@@ -28,9 +27,6 @@ class Genetics(object):
         self.save_dir = save_dir
         self.envs_number = envs_number
         self.parents_scores = parents_scores
-
-        # Model parameters
-        self.activations = activations
 
     @staticmethod
     def generate_parent_probs(best_scores):
@@ -58,15 +54,11 @@ class Genetics(object):
 
     def crossover(self, first_parent_index, second_parent_index):
         from model import AtariModel
-        first_parent = AtariModel(
-            activations=self.activations
-        )
+        first_parent = AtariModel()
         first_parent.load_weights(self.save_dir + 'parent_{}'.format(first_parent_index) + '.h5')
         first_weights = first_parent.get_weights()
 
-        second_parent = AtariModel(
-            activations=self.activations
-        )
+        second_parent = AtariModel()
         second_parent.load_weights(self.save_dir + 'parent_{}'.format(second_parent_index) + '.h5')
         second_weights = second_parent.get_weights()
 
@@ -83,12 +75,10 @@ class Genetics(object):
 
         return new_weights
 
-    def generate_model(self, index, init=False):
+    def generate_model(self, index, load=True):
         from model import AtariModel
-        model = AtariModel(
-            activations=self.activations
-        )
-        if not init:
+        model = AtariModel()
+        if load:
             if index == self.population_size - 1:
                 best_parent_index = np.argmax(self.parents_scores)
                 model.load_weights(self.save_dir + 'parent_{}'.format(best_parent_index) + '.h5')
@@ -105,13 +95,13 @@ class Genetics(object):
         model.save_weights(self.save_dir + 'model_{}'.format(index) + '.h5')
         print('Model {} generated'.format(index))
 
-    def generate_new_models(self, init=False):
+    def generate_new_models(self, load=True):
         processes = []
 
         for pool_first in range(0, self.population_size, self.envs_number):
             pool_last = min(pool_first + self.envs_number, self.population_size)
             for index in range(pool_first, pool_last):
-                p = Process(target=self.generate_model, args=(index, init,))
+                p = Process(target=self.generate_model, args=(index, load,))
                 p.start()
                 processes.append(p)
 

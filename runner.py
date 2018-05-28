@@ -1,5 +1,4 @@
 import os
-import time
 
 from shutil import copyfile
 from multiprocessing import Process
@@ -27,7 +26,7 @@ class Runner(object):
             current_map.filename = args.map_name
         
         self.map_name = current_map
-        self.game_steps_per_episode = args.steps_per_episode
+        self.game_length = args.game_length
         self.max_games = args.max_games
         self.step_mul = args.step_mul
         self.screen_size = args.screen_size
@@ -46,21 +45,20 @@ class Runner(object):
 
         # Model parameters
         self.layers = args.layers
-        self.activations = args.activations_feature
+
+        self.load = args.load
 
         # Starting params
         self.generation = 0
-        self.game_number = 0
         self.scores = np.zeros(self.population_size)
 
         # Save dir
-        self.save_dir = args.save_dir + 'pop_{}_par_{}_mp_{}_c_{}_u_{}_a_{}/'.format(
+        self.save_dir = args.save_dir + 'pop_{}_par_{}_mp_{}_c_{}_u_{}/'.format(
             self.population_size,
             self.parents_count,
             self.mutation_power,
             self.do_crossover,
-            self.choose_uniformly,
-            self.activations
+            self.choose_uniformly
         )
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
@@ -109,30 +107,19 @@ class Runner(object):
             do_crossover=self.do_crossover,
             parents_scores=parents_scores,
             save_dir=self.save_dir,
-            envs_number=self.envs_number,
-            activations=self.activations
+            envs_number=self.envs_number
         )
         genetics.generate_new_models()
 
     def run_envs(self):
         processes = []
-        t = time.time()
-        model_number = self.game_number % self.population_size
-        pool_last = min(model_number + self.envs_number, self.population_size)
-        while model_number < pool_last:
-            print('Game: {}, model: {}'.format(self.game_number, model_number))
-            p = Process(target=self.run_env, args=(model_number,))
+        for pool_number in range(self.envs_number):
+            p = Process(target=self.run_env, args=(pool_number,))
             p.start()
             processes.append(p)
-            model_number += 1
-            self.game_number += 1
 
         for p in processes:
             p.join()
-
-        time_spent = time.time() - t
-        print('On {} processes spent {} seconds'.format(self.envs_number, time_spent))
-        print('Average time spent: {}'.format(time_spent / self.envs_number))
 
     def load_scores(self):
         for model_number in range(self.population_size):
@@ -152,44 +139,31 @@ class Runner(object):
             do_crossover=self.do_crossover,
             parents_scores=np.zeros(self.parents_count),
             save_dir=self.save_dir,
-            envs_number=self.envs_number,
-            activations=self.activations
+            envs_number=self.envs_number
         )
-        g.generate_new_models(init=True)
+        g.generate_new_models(load=True)
 
-        while True:
-            envs_runned = 0
-            while envs_runned < self.population_size:
-                # Run n envs
-                self.run_envs()
-                envs_runned += self.envs_number
+        while self.generation < self.max_generations:
+            self.run_envs()
 
             self.load_scores()
             self.genetics()
             self.reset_scores()
             self.generation += 1
 
-            if self.generation > self.max_generations:
-                break
-
-    def run_env(self, model_number):
+    def run_env(self, pool_number):
         env = MyEnv(
             map_name=self.map_name,
             step_mul=self.step_mul,
             screen_size=self.screen_size,
             minimap_size=self.screen_size,
-            game_steps_per_episode=self.game_steps_per_episode,
-            max_games = self.max_games,
+            game_length=self.game_length,
+            max_games=self.max_games,
+            envs_number=self.envs_number,
             visualize=self.visualize,
-            model_number=model_number,
+            pool_number=pool_number,
+            population_size=self.population_size,
             generation=self.generation,
-            save_dir=self.save_dir,
-            activations=self.activations
+            save_dir=self.save_dir
         )
-        cumulative_score = env.run()
-
-        print("Model: {}, cumulative_score: {}".format(model_number, cumulative_score))
-
-        # TODO: Возможно, лучше будет использовать хитрые фичи multiprocessing, а не костыли с сохранением
-        with open(self.save_dir + 'score_{}.txt'.format(model_number), mode='w') as f:
-            print(cumulative_score, file=f)
+        env.run()

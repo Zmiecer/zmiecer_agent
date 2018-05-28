@@ -15,7 +15,7 @@ def parse_args():
     parser.add_argument('--map_name', type=str, default='MoveToBeacon', help='Map name')
     parser.add_argument('--screen_size', type=int, default=64, help='Screen size')
     parser.add_argument('--step_mul', type=int, default=8, help='Frames per step')
-    parser.add_argument('--steps_per_episode', type=int, default=2500, help='Maximum steps per game')
+    parser.add_argument('--game_length', type=int, default=500, help='Maximum steps per game')
     parser.add_argument('--max_games', type=int, default=5, help='Maximum games per run')
     parser.add_argument('--generations', type=int, default=100, help='Generations count')
 
@@ -25,10 +25,9 @@ def parse_args():
     parser.add_argument('--mutation_power', type=float, default=0.002, help='Mutation power')
 
     # Booleans
-    parser.add_argument('--uniform', dest='uniform_feature', action='store_true', help='Use uniform to choose parents')
-    parser.add_argument('--no-uniform', dest='uniform_feature', action='store_false')
-    parser.add_argument('--crossover', dest='crossover_feature', action='store_true', help='Use crossover')
-    parser.add_argument('--no-crossover', dest='crossover_feature', action='store_false')
+    parser.add_argument('--no-uniform', dest='uniform_feature', action='store_false', default=True,
+                        help='Use uniform distribution to choose parents')
+    parser.add_argument('--no-crossover', dest='crossover_feature', action='store_false', default=True)
 
     # Env parameters
     parser.add_argument('--envs_number', type=int, default=1, help='Number of envs to run in parallel')
@@ -38,10 +37,8 @@ def parse_args():
 
     # Model parameters
     parser.add_argument('--layers', type=int, default=2, help='Number of layers')
-    parser.add_argument('--activations', dest='activations_feature', action='store_true', help='Activations after conv layers')
-    parser.add_argument('--no-activations', dest='activations_feature', action='store_false')
 
-    parser.add_argument('--load', type=bool, default=False, help='Load model')
+    parser.add_argument('--load', action='store_true', help='Load model', default=False)
 
     args = parser.parse_args()
     return args

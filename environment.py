@@ -1,3 +1,4 @@
+import time
 import numpy as np
 
 from pysc2.env.environment import StepType
@@ -14,27 +15,27 @@ class MyEnv(SC2Env):
                  step_mul,
                  screen_size,
                  minimap_size,
-                 game_steps_per_episode,
+                 game_length,
                  max_games,
+                 envs_number,
                  visualize,
-                 model_number,
+                 pool_number,
+                 population_size,
                  generation,
-                 save_dir,
-                 activations):
+                 save_dir):
         super(MyEnv, self).__init__(map_name=map_name,
                                     step_mul=step_mul,
                                     screen_size_px=(screen_size, screen_size),
                                     minimap_size_px=(minimap_size, minimap_size),
                                     game_steps_per_episode=0,
                                     visualize=visualize)
-        self.game_steps_per_episode = game_steps_per_episode
+        self.game_length = game_length
         self.max_games = max_games
-        self.model_number = model_number
+        self.pool_number = pool_number
+        self.envs_number = envs_number
+        self.population_size = population_size
         self.generation = generation
         self.save_dir = save_dir
-
-        # Model parameters
-        self.activations = activations
 
     @property
     def episode_count(self):
@@ -94,21 +95,18 @@ class MyEnv(SC2Env):
             action_args.append(arg_value)
         return action_args
 
-    def run(self):
+    def run_model(self, model, model_number):
         obs = self.reset()
-        print('Env {} reset completed'.format(self.model_number))
+        print('Env {} reset completed'.format(self.pool_number))
 
-        cumulative_score = 0
-
-        from model import AtariModel
-        model = AtariModel(
-            activations=self.activations
-        )
-        model.load_weights(self.save_dir + 'model_{}.h5'.format(self.model_number))
-        print('Model {} loaded'.format(self.model_number))
+        model.load_weights(self.save_dir + 'model_{}.h5'.format(model_number))
+        print('Model {} loaded'.format(model_number))
 
         games_played = 0
-        while True:
+        step = 0
+        cumulative_score = 0
+
+        while step < self.game_length:
             observations = obs[0].observation
             screen, minimap = self.translate_observations(observations)
 
@@ -120,8 +118,9 @@ class MyEnv(SC2Env):
 
             action_args = self.prepare_args(action, res_dict)
 
-            # call action in new step
+            # call action in a new step
             obs = self.step(actions=[FunctionCall(action.id, action_args)])
+            step += 1
 
             if self.state == StepType.FIRST:
                 games_played += 1
@@ -129,7 +128,25 @@ class MyEnv(SC2Env):
                 print('Game {} has ended, score: {}'.format(games_played, current_reward))
                 cumulative_score += current_reward
 
-            if games_played >= self.max_games:
-                break
+        # TODO: Нужно избегать двойного суммирования score
+        games_played += 1
+        observations = obs[0].observation
+        current_reward = observations["score_cumulative"][0]
+        print('Game {} has ended, score: {}'.format(games_played, current_reward))
+        cumulative_score += current_reward
 
-        return cumulative_score
+        print("Model: {}, cumulative_score: {}".format(model_number, cumulative_score))
+
+        # TODO: Возможно, лучше будет использовать хитрые фичи multiprocessing, а не костыли с сохранением
+        with open(self.save_dir + 'score_{}.txt'.format(model_number), mode='w') as f:
+            print(cumulative_score, file=f)
+
+    def run(self):
+        from model import AtariModel
+        model = AtariModel()
+
+        for model_number in range(self.pool_number, self.population_size, self.envs_number):
+            t = time.time()
+            self.run_model(model, model_number)
+            time_spent = time.time() - t
+            print('Average time spent: {}'.format(time_spent / self.envs_number))
