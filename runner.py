@@ -141,7 +141,7 @@ class Runner(object):
             save_dir=self.save_dir,
             envs_number=self.envs_number
         )
-        g.generate_new_models(load=True)
+        g.generate_new_models(load=self.load)
 
         while self.generation < self.max_generations:
             self.run_envs()

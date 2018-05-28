@@ -138,6 +138,7 @@ class MyEnv(SC2Env):
         print("Model: {}, cumulative_score: {}".format(model_number, cumulative_score))
 
         # TODO: Возможно, лучше будет использовать хитрые фичи multiprocessing, а не костыли с сохранением
+        # TODO: Иногда score в одном пуле становится одинаковым. Нужно осознать, почему
         with open(self.save_dir + 'score_{}.txt'.format(model_number), mode='w') as f:
             print(cumulative_score, file=f)
 

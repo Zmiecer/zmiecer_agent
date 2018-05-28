@@ -164,3 +164,5 @@ fabric.properties
 echo\.sh
 
 train\.sh
+
+test\.py
