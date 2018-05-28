@@ -98,7 +98,6 @@ class MyEnv(SC2Env):
         obs = self.reset()
         print('Env {} reset completed'.format(self.model_number))
 
-        steps = 0
         cumulative_score = 0
 
         from model import AtariModel
@@ -107,6 +106,7 @@ class MyEnv(SC2Env):
         )
         model.load_weights(self.save_dir + 'model_{}.h5'.format(self.model_number))
         print('Model {} loaded'.format(self.model_number))
+
         games_played = 0
         while True:
             observations = obs[0].observation
@@ -123,12 +123,11 @@ class MyEnv(SC2Env):
             # call action in new step
             obs = self.step(actions=[FunctionCall(action.id, action_args)])
 
-            steps += 1
-            if self.state == StepType.LAST:
-                current_reward = observations["score_cumulative"][0]
-                print(current_reward)
-                cumulative_score += current_reward
+            if self.state == StepType.FIRST:
                 games_played += 1
+                current_reward = observations["score_cumulative"][0]
+                print('Game {} has ended, score: {}'.format(games_played, current_reward))
+                cumulative_score += current_reward
 
             if games_played >= self.max_games:
                 break
